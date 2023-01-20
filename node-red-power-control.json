@@ -1,0 +1,384 @@
+[
+    {
+        "id": "1098badcef37db4e",
+        "type": "subflow",
+        "name": "Power Control",
+        "category": "Power Control",
+        "in": [
+            {
+                "x": 50,
+                "y": 40,
+                "wires": [
+                    {
+                        "id": "b0c6c534b02c10a8"
+                    }
+                ]
+            }
+        ],
+        "out": [
+            {
+                "x": 540,
+                "y": 40,
+                "wires": [
+                    {
+                        "id": "acad7c9b4d534d5f",
+                        "port": 0
+                    }
+                ]
+            },
+            {
+                "x": 610,
+                "y": 90,
+                "wires": [
+                    {
+                        "id": "3da39c725ea748c6",
+                        "port": 0
+                    }
+                ]
+            }
+        ],
+        "env": [
+            {
+                "name": "powercontrol_on_off",
+                "type": "str",
+                "value": "input_boolean.powercontrol_on_off",
+                "ui": {
+                    "icon": "font-awesome/fa-toggle-off",
+                    "label": {
+                        "en-US": "On/Off::"
+                    },
+                    "type": "input",
+                    "opts": {
+                        "types": [
+                            "str"
+                        ]
+                    }
+                }
+            },
+            {
+                "name": "general_sensor",
+                "type": "str",
+                "value": "sensor.name",
+                "ui": {
+                    "icon": "font-awesome/fa-bar-chart",
+                    "label": {
+                        "en-US": "Sensore generale (W):"
+                    },
+                    "type": "input",
+                    "opts": {
+                        "types": [
+                            "str"
+                        ]
+                    }
+                }
+            },
+            {
+                "name": "power_max",
+                "type": "num",
+                "value": "3300",
+                "ui": {
+                    "icon": "font-awesome/fa-flash",
+                    "label": {
+                        "en-US": "Potenza contatore (W):"
+                    },
+                    "type": "spinner",
+                    "opts": {
+                        "min": 100,
+                        "max": 100000
+                    }
+                }
+            },
+            {
+                "name": "power_limit",
+                "type": "num",
+                "value": "2950",
+                "ui": {
+                    "icon": "font-awesome/fa-flash",
+                    "label": {
+                        "en-US": "Potenza limite (W):"
+                    },
+                    "type": "spinner",
+                    "opts": {
+                        "min": 100,
+                        "max": 100000
+                    }
+                }
+            },
+            {
+                "name": "delay_turn_off",
+                "type": "num",
+                "value": "10",
+                "ui": {
+                    "icon": "font-awesome/fa-clock-o",
+                    "label": {
+                        "en-US": "Minuti ritardo OFF:"
+                    },
+                    "type": "spinner",
+                    "opts": {
+                        "min": 1,
+                        "max": 120
+                    }
+                }
+            },
+            {
+                "name": "delay_turn_on",
+                "type": "num",
+                "value": "15",
+                "ui": {
+                    "icon": "font-awesome/fa-clock-o",
+                    "label": {
+                        "en-US": "Minuti ritardo ON:"
+                    },
+                    "type": "spinner",
+                    "opts": {
+                        "min": 1,
+                        "max": 120
+                    }
+                }
+            },
+            {
+                "name": "entities",
+                "type": "json",
+                "value": "[{\"power\":\"entity.name\",\"load\":\"entity.name\"}]",
+                "ui": {
+                    "icon": "font-awesome/fa-bolt",
+                    "label": {
+                        "en-US": "Carichi da controllare:"
+                    },
+                    "type": "input",
+                    "opts": {
+                        "types": [
+                            "json"
+                        ]
+                    }
+                }
+            }
+        ],
+        "meta": {
+            "module": "node-red-subflow-power-control",
+            "version": "1.0.0",
+            "author": "Bruno Leonardi <b.leonardi78@gmail.com>",
+            "desc": "Controllo carichi",
+            "keywords": "power, control, load, switch, sensor, home, assistant",
+            "license": "MIT"
+        },
+        "color": "#0080FF",
+        "inputLabels": [
+            "Trigger"
+        ],
+        "outputLabels": [
+            "MQTT",
+            "Home Assistant Call Service"
+        ],
+        "icon": "node-red-contrib-home-assistant-websocket/ha-entity-switch.svg",
+        "status": {
+            "x": 510,
+            "y": 140,
+            "wires": [
+                {
+                    "id": "7852f8568f87532d",
+                    "port": 0
+                }
+            ]
+        }
+    },
+    {
+        "id": "c88846e053a66aa4",
+        "type": "status",
+        "z": "1098badcef37db4e",
+        "name": "",
+        "scope": [
+            "cfd7f621ad587700"
+        ],
+        "x": 55,
+        "y": 140,
+        "wires": [
+            [
+                "7852f8568f87532d"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "cfd7f621ad587700",
+        "type": "function",
+        "z": "1098badcef37db4e",
+        "name": "Power Control",
+        "func": "////////////////////////////////////////////////////////////////////\n////////////////////////////////////////////////////////////////////\n////////////////////////////////////////////////////////////////////\n\n/**\n * Restituisce Unix in millisecondi\n * @param {string | number | Date} date Data di riferimento, se Null restituisce la data Unix attuale\n * @param {boolean} seconds Unix in secondi, default false\n */\nfunction GetUnix(date = null, seconds = false) {\n    if (!date) return (seconds) ? Math.round(Date.now().valueOf() / 1000) : Date.now()\n    if (typeof date === 'string' && !isNaN(date)) date = parseInt(date)\n    if (typeof date === 'number') {\n        if (date.toString().length < 13 && !seconds) date *= 1000\n        date = Math.round(date)\n    }\n    return (seconds) ? Math.round(new Date(date).valueOf() / 1000) : new Date(date).valueOf()\n}\n\n/**\n * Restituisce la data e ora (Local Time)\n * @param {string | number | Date} date Data UTC di riferimento, se Null restituisce la data attuale\n * @param {boolean} en Formato inglese YYYY-MM-DD H:M:S\n */\nfunction GetLocalDateTime(date = null, en = false) {\n    date = GetUnix(date)\n    date = new Date(date)\n\n    let h = (new Intl.DateTimeFormat('it-IT', { timeStyle: 'long' }).format(date)).substr(0, 8).trim()\n    let y = date.getFullYear()\n    let m = (date.getMonth() + 1).toString()\n    let d = (date.getDate()).toString()\n    m = (m.length == 1) ? '0' + m : m\n    d = (d.length == 1) ? '0' + d : d\n\n    return (en) ? y + '-' + m + '-' + d + ' ' + h : d + '/' + m + '/' + y + ' ' + h\n}\n\n/**\n * Restituisce un Object con tutti i risultati (Local Time)\n * @param {string | number | Date} date_from Data UTC inizio\n * @param {string | number | Date} date_to Data UTC fine, se Null restituisce la data attuale\n */\nfunction GetTimeElapsed(date_from, date_to = null) {\n    date_from = GetUnix(date_from)\n    date_from = new Date(date_from)\n    date_to = GetUnix(date_to)\n    date_to = new Date(date_to)\n\n    var mls = Math.abs((date_from.getTime() - date_to.getTime()))\n    mls = Math.round(mls)\n\n    var milliseconds = mls / 1000\n    var years = Math.floor(milliseconds / 31536000)\n    var days = Math.floor((milliseconds % 31536000) / 86400)\n    var hours = Math.floor(((milliseconds % 31536000) % 86400) / 3600)\n    var minutes = Math.floor((((milliseconds % 31536000) % 86400) % 3600) / 60)\n    var seconds = Math.floor((((milliseconds % 31536000) % 86400) % 3600) % 60)\n\n    var levels = [\n        [years, ((years > 1) ? 'anni' : 'anno')],\n        [days, ((days > 1) ? 'giorni' : 'giorno')],\n        [hours, ((hours > 1) ? 'ore' : 'ora')],\n        [minutes, ((minutes > 1) ? 'minuti' : 'minuto')],\n        [seconds, ((seconds > 1) ? 'secondi' : 'secondo')],\n    ]\n\n    var description = ''\n\n    for (var i = 0, max = levels.length; i < max; i++) {\n        if (levels[i][0] === 0) continue\n        description += ' ' + levels[i][0] + ' ' + levels[i][1]\n    }\n\n    description = description.trim()\n    description = (description == '') ? '1 secondo' : description\n\n    return {\n        start: date_from,\n        end: date_to,\n        description: description,\n        years: years,\n        days: Math.floor(mls / (1000 * 60 * 60 * 24)),\n        hours: Math.floor(mls / (1000 * 60 * 60)),\n        minutes: Math.floor(mls / (1000 * 60)),\n        seconds: Math.floor(mls / 1000),\n        milliseconds: mls\n    }\n}\n\n/**\n * Restituisce un numero intero da una stringa di testo\n * @param {any} value Stringa di testo da valutare\n * @param {any} return_value Valore di default, null\n */\nfunction GetNumber(value = null, return_value = 0) {\n    if (value === null || value === undefined) { return return_value }\n    if (typeof value === 'number') { return value }\n    if (typeof value !== 'string') { return value }\n    if (value.trim() === '') { return return_value }\n    let number = parseInt(value)\n    return (Number.isInteger(number)) ? number : return_value\n}\n\n/**\n * Verifica se un oggetto è di tipo String vuota e non contiene caratteri\n * @param {object} object Oggetto da verificare\n */\nfunction IsStringEmpty(object) {\n    if (object === null || object === undefined) return true\n    return (typeof object === 'string' && object.trim().length === 0)\n}\n\n/**\n * Verifica se un oggetto è un Object Array\n * @param {object} object Oggetto da verificare\n */\nfunction IsArray(object) {\n    if (object === null || object === undefined) return false\n    return (Array.isArray(object))\n}\n\n////////////////////////////////////////////////////////////////////\n////////////////////////////////////////////////////////////////////\n////////////////////////////////////////////////////////////////////\n\n/**Nome applicazioni*/\nconst APP_NAME = 'Power Control'\n\n/**Versione applicazione*/\nconst APP_VERSION = '1.0.0 del 14/01/2023'\n\n/**Autore applicazione*/\nconst AUTHOR_NAME = 'Bruno Leonardi'\n\n/**Email autore*/\nconst AUTHOR_EMAIL = 'b.leonardi78@gmail.com'\n\n////////////////////////////////////////////////////////////////////\n////////////////////////////////////////////////////////////////////\n////////////////////////////////////////////////////////////////////\n\n/**Tutti gli stati delle entità di Home Assistant*/\nconst SYSTEM_STATES = global.get('homeassistant.homeAssistant.states') || {}\n\n/**Tutti i servizi di Home Assistant*/\nconst SYSTEM_SERVICES = global.get('homeassistant.homeAssistant.services') || {}\n\n/**Stato servizio server*/\nconst SYSTEM_RUNNING = global.get('homeassistant.homeAssistant.isRunning') || false\n\n/**Stato connessione server*/\nconst SYSTEM_CONNECTED = global.get('homeassistant.homeAssistant.isConnected') || false\n\n////////////////////////////////////////////////////////////////////\n////////////////////////////////////////////////////////////////////\n////////////////////////////////////////////////////////////////////\n\n/**Indica se il controllo carichi è in funzione*/\nvar PC_ENABLED = false\n\n/**Comando per attivare o disattivare il controllo carichi*/\nvar PC_COMMAND_ON_OFF = env.get(\"powercontrol_on_off\") || ''\nPC_COMMAND_ON_OFF = PC_COMMAND_ON_OFF.trim() || null\n\n////////////////////////////////////////////////////////////////////\n////////////////////////////////////////////////////////////////////\n////////////////////////////////////////////////////////////////////\n\n/**Sensore generale per la lettura della potenza*/\nvar SENSOR_GENERAL = env.get(\"general_sensor\") || ''\nSENSOR_GENERAL = SENSOR_GENERAL.trim() || null\n\n/**Potenza massima del contatore*/\nconst POWER_MAX = GetNumber(env.get(\"power_max\"))\n\n/**Potenza limite di sovraccarico*/\nconst POWER_LIMIT = GetNumber(env.get(\"power_limit\"))\n\n/**Ritardo riattivazione carichi*/\nconst DELAY_TURN_ON = GetNumber(env.get(\"delay_turn_on\"), 10)\n\n/**Ritardo disattivazione carichi*/\nconst DELAY_TURN_OFF = GetNumber(env.get(\"delay_turn_off\"), 5)\n\n/**Configurazione di Power Control*/\nvar CONFIGURATION = null\n\n////////////////////////////////////////////////////////////////////\n////////////////////////////////////////////////////////////////////\n////////////////////////////////////////////////////////////////////\n\n/**Potenza attuale letta*/\nvar POWER_NOW = function () {\n    let value = GetSystemEntity(SENSOR_GENERAL) || { state: 0 }\n    return Math.round(value.state)\n}\n\n/**Potenza residua disponibile*/\nvar POWER_AVAILABLE = function () {\n    let value = ((POWER_MAX - POWER_NOW()) <= 0) ? 0 : POWER_MAX - POWER_NOW()\n    return Math.round(value)\n}\n\n/**Potenza di sovraccarico in base al limite impostato*/\nvar POWER_OVERLOAD = function () {\n    let value = (POWER_NOW() > POWER_LIMIT) ? POWER_NOW() - POWER_LIMIT : 0\n    return Math.round(value)\n}\n\n/**Indica se il limite è stato raggiunto o superato*/\nvar IS_OVERLOAD = function () {\n    return (POWER_NOW() > POWER_LIMIT || POWER_NOW() >= POWER_MAX)\n}\n\n/**Indica se il sovraccarico è uguale o superiore alla potenza del contatore*/\nvar IS_OVERLOAD_CRITICAL = function () {\n    return (POWER_NOW() >= POWER_MAX)\n}\n\n////////////////////////////////////////////////////////////////////\n////////////////////////////////////////////////////////////////////\n////////////////////////////////////////////////////////////////////\n\n/**Struttura Array di entità da controllare in ordine di distacco [{\"power\":\"entity.name\",\"load\":\"entity.name\"}]*/\nvar ENTITIES = [{\n    power: null,\n    load: null,\n    name: null,\n    restore: true,\n    state: 'off',\n    energy: null\n}]; ENTITIES = env.get(\"entities\") || []\n\n/**Numero di entità impostate*/\nvar ENTITIES_COUNT = ENTITIES.length\n\n/**Numero di entità impostate e valide*/\nvar ENTITIES_VALID = 0\n\n/**Lista di entità configurate*/\nvar ENTITIES_LIST = 'Nessun carico'\n\n/**Energia delle entità*/\nvar ENTITIES_ENERGY_CONSUMPTION = 0\n\n/**Energia delle entità sospesa*/\nvar ENTITIES_ENERGY_PENDING = 0\n\n////////////////////////////////////////////////////////////////////\n////////////////////////////////////////////////////////////////////\n////////////////////////////////////////////////////////////////////\n\n/**Domini disponibili per il controllo*/\nconst DOMAIN_AVAILABLE = {\n    'switch': 'switch',\n    'light': 'light',\n    'fan': 'fan',\n    'climate': 'climate',\n    'media_player': 'media_player'\n}\n\n////////////////////////////////////////////////////////////////////\n////////////////////////////////////////////////////////////////////\n////////////////////////////////////////////////////////////////////\n\n/**\n * Accende il carico\n* @param {string} entity_id Entità di Home Assistant\n*/\nfunction TurnOn(entity_id) {\n    let hassio = {\n        payload: {\n            domain: entity_id.split('.')[0],\n            service: 'turn_on',\n            target: {\n                entity_id: [entity_id]\n            }\n        },\n        topic: entity_id.replace(\".\", \"/\") + \"/powercontrol/set\"\n    }\n\n    node.send([null, hassio])\n}\n\n/**\n * Spegne il carico\n* @param {string} entity_id Entità di Home Assistant\n*/\nfunction TurnOff(entity_id) {\n    let hassio = {\n        payload: {\n            domain: entity_id.split('.')[0],\n            service: 'turn_off',\n            target: {\n                entity_id: [entity_id]\n            }\n        },\n        topic: entity_id.replace(\".\", \"/\") + \"/powercontrol/set\"\n    }\n\n    node.send([null, hassio])\n}\n\n////////////////////////////////////////////////////////////////////\n////////////////////////////////////////////////////////////////////\n////////////////////////////////////////////////////////////////////\n\n/**\n* @param {number} state Stato controllo carichi, 0/1\n* @param {string} message Descrizione dello stato\n* @param {string} node_status_fill Colore node status\n*/\nfunction SendPowerControl(state, message, node_status_fill = 'green') {\n    let mqtt = { payload: { attributes: {} } }\n\n    mqtt.payload.state = (state === 0) ? 'OFF' : 'ON'\n    mqtt.payload.attributes.app = APP_NAME\n    mqtt.payload.attributes.version = APP_VERSION\n    mqtt.payload.attributes.author = AUTHOR_NAME\n    mqtt.payload.attributes.message = message\n    mqtt.payload.attributes.enabled = (PC_ENABLED) ? 'on' : 'off'\n    mqtt.payload.attributes.system_running = SYSTEM_RUNNING ? 'on' : 'off'\n    mqtt.payload.attributes.system_connected = SYSTEM_CONNECTED ? 'on' : 'off'\n    mqtt.payload.attributes.configuration = CONFIGURATION\n    mqtt.payload.attributes.delay_on = DELAY_TURN_ON\n    mqtt.payload.attributes.delay_off = DELAY_TURN_OFF\n    mqtt.payload.attributes.power_max = POWER_MAX\n    mqtt.payload.attributes.power_now = POWER_NOW()\n    mqtt.payload.attributes.power_available = POWER_AVAILABLE()\n    mqtt.payload.attributes.power_limit = POWER_LIMIT\n    mqtt.payload.attributes.power_overload = POWER_OVERLOAD()\n    mqtt.payload.attributes.overload = IS_OVERLOAD() ? 'on' : 'off'\n    mqtt.payload.attributes.overload_critical = IS_OVERLOAD_CRITICAL() ? 'on' : 'off'\n    mqtt.payload.attributes.entities_count = ENTITIES_COUNT\n    mqtt.payload.attributes.entities_valid = ENTITIES_VALID\n    mqtt.payload.attributes.entities_list = ENTITIES_LIST\n    mqtt.payload.attributes.entities_energy_consumption = ENTITIES_ENERGY_CONSUMPTION\n    mqtt.payload.attributes.entities_energy_pending = ENTITIES_ENERGY_PENDING\n    mqtt.payload.attributes.last_updated = GetLocalDateTime()\n\n    //memorizzo i dati\n    global.set(\"powercontrol.settings\", mqtt.payload.attributes)\n\n    //conversione payload in stringa\n    mqtt.payload = JSON.stringify(mqtt.payload)\n\n    //impostazioni MQTT\n    mqtt.qos = 0\n    mqtt.retain = true\n    mqtt.topic = \"info/powercontrol/status\"\n\n    //output\n    node.send([mqtt, null])\n\n    //node status\n    node.status({ fill: node_status_fill, shape: \"dot\", text: message })\n    return true\n}\n\n////////////////////////////////////////////////////////////////////\n////////////////////////////////////////////////////////////////////\n////////////////////////////////////////////////////////////////////\n\n/**\n * Restituisce l'entità di Home Assistant altrimenti un valore null\n* @param {string} entity_id Entità di Home Assistant\n*/\nfunction GetSystemEntity(entity_id) {\n    try {\n        return SYSTEM_STATES[entity_id]\n    } catch (error) {\n        return null\n    }\n}\n\n////////////////////////////////////////////////////////////////////\n////////////////////////////////////////////////////////////////////\n////////////////////////////////////////////////////////////////////\n\nif (!SYSTEM_CONNECTED) {\n    SendPowerControl(0, 'Il componente di Node-red \"node-red-contrib-home-assistant-websocket\" non è connesso', 'red')\n    return null\n}\n\nif (!SYSTEM_RUNNING) {\n    SendPowerControl(0, 'Il componente di Node-red \"node-red-contrib-home-assistant-websocket\" non è avviato', 'red')\n    return null\n}\n\n////////////////////////////////////////////////////////////////////\n////////////////////////////////////////////////////////////////////\n////////////////////////////////////////////////////////////////////\n\nif (IsStringEmpty(SENSOR_GENERAL)) {\n    SendPowerControl(0, 'Impostare il sensore generale per la lettura dei consumi', 'red')\n    return null\n}\n\nif (!SENSOR_GENERAL.startsWith('sensor.')) {\n    SendPowerControl(0, 'Il sensore generale impostato non è un`entità di tipo sensor', 'red')\n    return null\n}\n\nif (POWER_MAX <= 0) {\n    SendPowerControl(0, 'Impostare correttamente la potenza contatore, in genere per un`abitazione normale è di 3300 w', 'red')\n    return null\n} else if (POWER_MAX < 500) {\n    SendPowerControl(0, `La potenza del contatore non può essere inferiore a 500 w, attualmente è di ${POWER_MAX} w`, 'red')\n    return null\n}\n\nif (POWER_LIMIT <= 0) {\n    SendPowerControl(0, `Impostare correttamente la potenza limite di sovraccarico che attualmente è di ${POWER_LIMIT} w, il valore consigliato è ${Math.round((POWER_MAX / 100) * 90)} w`, 'red')\n    return null\n} else if (POWER_LIMIT > POWER_MAX) {\n    SendPowerControl(0, `Impostare correttamente la potenza limite di sovraccarico che attualmente è di ${POWER_LIMIT} w e che non può essere superiore a quella del contatore, il valore consigliato è ${Math.round((POWER_MAX / 100) * 90)} w`, 'red')\n    return null\n}\n\nif (!IsArray(ENTITIES)) {\n    SendPowerControl(0, `La lista dei carichi da controllare deve essere di tipo Array, esempio di struttura: [{\"power\":\"entity.name\",\"load\":\"entity.name\"}]`, 'red')\n    return null\n}\n\nif (ENTITIES_COUNT === 0) {\n    SendPowerControl(0, `Nessun carico da controllare`, 'gray')\n    return null\n}\n\n////////////////////////////////////////////////////////////////////\n////////////////////////////////////////////////////////////////////\n////////////////////////////////////////////////////////////////////\n//controllo e validazione delle entità impostate\n\nfor (let i = 0; i < ENTITIES.length; i++) {\n    let entity = ENTITIES[i]\n\n    //verifico l'esistenza del sensore\n    if (entity.power && !SYSTEM_STATES.hasOwnProperty(entity.power)) {\n        SendPowerControl(0, `Il sensore ${i} ${entity.power} non esiste in Home Assistant`, 'red')\n        return null\n    }\n\n    //verifico l'esistenza del carico\n    if (entity.load && !SYSTEM_STATES.hasOwnProperty(entity.load)) {\n        SendPowerControl(0, `Il carico da controllare ${i} ${entity.load} non esiste in Home Assistant`, 'red')\n        return null\n    }\n\n    //verifico se il sensore è di tipo sensor\n    if (entity.power && !entity.power.startsWith('sensor.')) {\n        SendPowerControl(0, `Il sensore ${i} ${entity.power} non è sensore valido`, 'red')\n        return null\n    }\n\n    //verifico il dominio del carico da controllare\n    if (entity.load && !DOMAIN_AVAILABLE.hasOwnProperty(entity.load.split('.')[0])) {\n        SendPowerControl(0, `Il carico da controllare ${i} ${entity.load} non è gestito da ${APP_NAME}`, 'red')\n        return null\n    }\n\n    //validazione e memorizzazione del carico da controllare\n    if (entity.load !== null && entity.load !== undefined) {\n        ENTITIES[i].state = SYSTEM_STATES[entity.load].state\n        ENTITIES[i].name = SYSTEM_STATES[entity.load].attributes.friendly_name\n        ENTITIES[i].power = (entity.power) ? entity.power : null\n        ENTITIES[i].energy = (entity.power) ? Math.round(SYSTEM_STATES[entity.power].state) : entity.energy || 0\n        ENTITIES[i].restore = (typeof entity.restore === 'boolean') ? entity.restore : true\n        ENTITIES_ENERGY_CONSUMPTION += ENTITIES[i].energy\n        ++ENTITIES_VALID\n    }\n}\n\nif (ENTITIES_VALID === 0) {\n    SendPowerControl(0, `Verificare la lista delle entità perchè non sono state validate`, 'red')\n    return null\n} else if (ENTITIES_VALID != ENTITIES_COUNT) {\n    SendPowerControl(0, `Verificare la lista delle entità perchè ne sono state validate ${ENTITIES_VALID} su ${ENTITIES_COUNT}`, 'red')\n    return null\n}\n\nglobal.set(\"powercontrol.entities\", ENTITIES)\n\n////////////////////////////////////////////////////////////////////\n////////////////////////////////////////////////////////////////////\n////////////////////////////////////////////////////////////////////\n\n//controllo se è stato impostato un comando per attivare e disattivare il controllo carichi\nif (PC_COMMAND_ON_OFF && SYSTEM_STATES.hasOwnProperty(PC_COMMAND_ON_OFF)) {\n    let enabled = SYSTEM_STATES[PC_COMMAND_ON_OFF].state\n\n    if (typeof enabled === 'string') {\n        PC_ENABLED = (enabled.toLowerCase() == 'on' || enabled.toLowerCase() == 'true')\n    } else if (typeof enabled === 'number') {\n        PC_ENABLED = (enabled > 0)\n    } else if (typeof enabled === 'boolean') {\n        PC_ENABLED = enabled\n    } else {\n        SendPowerControl(0, `Lo stato di ${PC_COMMAND_ON_OFF} non è un valore valido`, 'red')\n        return null\n    }\n} else if (PC_COMMAND_ON_OFF) {\n    SendPowerControl(0, `L'entità ${PC_COMMAND_ON_OFF} per attivare o disattivare ${APP_NAME} non esiste in Home Assistant`, 'red')\n    return null\n} else {\n    PC_ENABLED = true\n}\n\n////////////////////////////////////////////////////////////////////\n////////////////////////////////////////////////////////////////////\n////////////////////////////////////////////////////////////////////\n\nif (PC_ENABLED) {\n    ENTITIES_LIST = `Lista dei carichi monitorati:`\n} else {\n    ENTITIES_LIST = `Lista dei carichi configurati:`\n}\n\nfor (let i = 0; i < ENTITIES.length; i++) {\n    if (ENTITIES[i].state.toLowerCase() == 'on' && ENTITIES[i].energy > 0) {\n        ENTITIES_LIST += `\\n${(i + 1)}° - ${ENTITIES[i].name} (Acceso ${ENTITIES[i].energy} w)`\n    } else if (ENTITIES[i].state.toLowerCase() == 'on' && ENTITIES[i].energy == 0) {\n        ENTITIES_LIST += `\\n${(i + 1)}° - ${ENTITIES[i].name} (Acceso)`\n    } else if (ENTITIES[i].state.toLowerCase() == 'off' && ENTITIES[i].energy > 0) {\n        ENTITIES_LIST += `\\n${(i + 1)}° - ${ENTITIES[i].name} (Spento ${ENTITIES[i].energy} w)`\n    } else if (ENTITIES[i].state.toLowerCase() == 'off' && ENTITIES[i].energy == 0) {\n        ENTITIES_LIST += `\\n${(i + 1)}° - ${ENTITIES[i].name} (Spento)`\n    } else {\n        ENTITIES_LIST += `\\n${(i + 1)}° - ${ENTITIES[i].name} (${ENTITIES[i].state})`\n    }\n}\n\n////////////////////////////////////////////////////////////////////\n////////////////////////////////////////////////////////////////////\n////////////////////////////////////////////////////////////////////\n\nCONFIGURATION = `* ${APP_NAME} ${APP_VERSION} *\\n`\nCONFIGURATION += `- Contatore: ${POWER_MAX} w\\n`\nCONFIGURATION += `- Sovraccarico: ${POWER_LIMIT} w\\n`\nCONFIGURATION += `- Ritardo OFF: ${DELAY_TURN_OFF} m\\n`\nCONFIGURATION += `- Ritardo ON: ${DELAY_TURN_ON} m\\n`\nCONFIGURATION += `- Carichi: ${ENTITIES_COUNT}\\n`\n\n////////////////////////////////////////////////////////////////////\n////////////////////////////////////////////////////////////////////\n////////////////////////////////////////////////////////////////////\n\nif (!PC_ENABLED) {\n    SendPowerControl(1, `${APP_NAME} è regolarmente configurato ma non è in funzione`, 'gray')\n    return null\n}\n\n////////////////////////////////////////////////////////////////////\n////////////////////////////////////////////////////////////////////\n////////////////////////////////////////////////////////////////////\n\nvar OVERLOAD = {\n    overload: false,\n    wait: 0,\n    energy_consumption: 0,\n    energy_pending: 0,\n    last_command: GetUnix(),\n    entities: []\n}\n\nif (IS_OVERLOAD()) {\n    OVERLOAD = global.get('powercontrol.overload') || OVERLOAD\n    if (!OVERLOAD.overload) {\n        OVERLOAD.overload = true\n        global.set('powercontrol.overload', OVERLOAD)\n    }\n} else if (global.get('powercontrol.overload')) {\n    OVERLOAD = global.get('powercontrol.overload')\n    if (OVERLOAD.overload) {\n        OVERLOAD.overload = false\n        OVERLOAD.wait = 0\n        OVERLOAD.last_command = GetUnix()\n        global.set('powercontrol.overload', OVERLOAD)\n    }\n}\n\n////////////////////////////////////////////////////////////////////\n////////////////////////////////////////////////////////////////////\n////////////////////////////////////////////////////////////////////\n\nvar MINUTES = 0\nvar SECONDS = 0\nvar ENERGY_PENDING = 0\nvar ENTITIES_TURN_OFF = []\n\n////////////////////////////////////////////////////////////////////\n////////////////////////////////////////////////////////////////////\n////////////////////////////////////////////////////////////////////\n\nif (IS_OVERLOAD()) {\n    SECONDS = GetTimeElapsed(OVERLOAD.last_command).seconds\n    MINUTES = GetTimeElapsed(OVERLOAD.last_command).minutes\n    OVERLOAD.wait = DELAY_TURN_OFF - MINUTES\n    OVERLOAD.energy_consumption = ENTITIES_ENERGY_CONSUMPTION\n\n    if (IS_OVERLOAD_CRITICAL() && SECONDS < 30) {\n        SendPowerControl(1, `${APP_NAME} ha rilevato un sovraccarico di ${POWER_OVERLOAD()} w e fra ${SECONDS} secondi inizierà a spegnere qualche carico`, 'yellow')\n        return null\n    } else if (IS_OVERLOAD_CRITICAL() && SECONDS >= 30) {\n        OVERLOAD.wait = 0\n        OVERLOAD.last_command = GetUnix()\n\n        for (let i = 0; i < ENTITIES.length; i++) {\n            let element = ENTITIES[i]\n            //cerco i carichi non spenti\n            if (element.state.toLowerCase() != 'off') {\n                //verifico se ho provato a spegnere il carico, ci riprovo\n                if (OVERLOAD.entities.includes(element.load)) {\n                    TurnOff(element.load)\n                } else {\n                    //aggiungo l'energia che sto per spegnere\n                    ENERGY_PENDING += element.energy\n                    //memorizzo il carico che sto spegnendo\n                    OVERLOAD.entities.push(element.load)\n                    ENTITIES_TURN_OFF.push(element)\n                    TurnOff(element.load)\n                    //se l'energia che sto provando a spegnere è sufficente smetto\n                    if (ENERGY_PENDING >= POWER_OVERLOAD()) break\n                }\n            }\n        }\n\n        ENTITIES_ENERGY_PENDING = OVERLOAD.energy_pending + ENERGY_PENDING\n        OVERLOAD.energy_pending = ENTITIES_ENERGY_PENDING\n        global.set('powercontrol.overload', OVERLOAD)\n\n        if (OVERLOAD.entities.length === ENTITIES_COUNT && ENTITIES_ENERGY_PENDING > 0) {\n            SendPowerControl(1, `${APP_NAME} ha spento tutti e ${ENTITIES_COUNT} i carichi per un totale di ${ENTITIES_ENERGY_PENDING} w`, 'yellow')\n        } else if (OVERLOAD.entities.length === ENTITIES_COUNT) {\n            SendPowerControl(1, `${APP_NAME} ha spento tutti e ${ENTITIES_COUNT} i carichi`, 'yellow')\n        } else if (ENTITIES_TURN_OFF.length === 1 && ENERGY_PENDING > 0) {\n            SendPowerControl(1, `${APP_NAME} ha spento ${ENTITIES_TURN_OFF[0].name}, ${ENERGY_PENDING} w`, 'yellow')\n        } else if (ENTITIES_TURN_OFF.length > 1 && ENERGY_PENDING > 0) {\n            SendPowerControl(1, `${APP_NAME} ha spento ${ENTITIES_TURN_OFF.length} carichi, ${ENERGY_PENDING} w`, 'yellow')\n        } else if (ENTITIES_TURN_OFF.length === 1) {\n            SendPowerControl(1, `${APP_NAME} ha spento ${ENTITIES_TURN_OFF[0].name}`, 'yellow')\n        } else if (ENTITIES_TURN_OFF.length > 1) {\n            SendPowerControl(1, `${APP_NAME} ha spento ${ENTITIES_TURN_OFF.length} carichi`, 'yellow')\n        }\n\n        return null\n    } else if (MINUTES >= DELAY_TURN_OFF) {\n        OVERLOAD.wait = 0\n        OVERLOAD.last_command = GetUnix()\n\n        for (let i = 0; i < ENTITIES.length; i++) {\n            let element = ENTITIES[i]\n            //cerco i carichi non spenti\n            if (element.state.toLowerCase() != 'off') {\n                //verifico se ho provato a spegnere il carico, ci riprovo\n                if (OVERLOAD.entities.includes(element.load)) {\n                    TurnOff(element.load)\n                } else {\n                    //calcolo l'energia che sto per spegnere\n                    ENERGY_PENDING += element.energy\n                    //memorizzo il carico che sto spegnendo\n                    OVERLOAD.entities.push(element.load)\n                    ENTITIES_TURN_OFF.push(element)\n                    TurnOff(element.load)\n                    break\n                }\n            }\n        }\n\n        ENTITIES_ENERGY_PENDING = OVERLOAD.energy_pending + ENERGY_PENDING\n        OVERLOAD.energy_pending = ENTITIES_ENERGY_PENDING\n        global.set('powercontrol.overload', OVERLOAD)\n\n        if (OVERLOAD.entities.length === ENTITIES_COUNT && ENTITIES_ENERGY_PENDING > 0) {\n            SendPowerControl(1, `${APP_NAME} ha spento tutti e ${ENTITIES_COUNT} i carichi per un totale di ${ENTITIES_ENERGY_PENDING} w`, 'yellow')\n        } else if (OVERLOAD.entities.length === ENTITIES_COUNT) {\n            SendPowerControl(1, `${APP_NAME} ha spento tutti e ${ENTITIES_COUNT} i carichi`, 'yellow')\n        } else if (ENTITIES_TURN_OFF.length === 1 && ENERGY_PENDING > 0) {\n            SendPowerControl(1, `${APP_NAME} ha spento ${ENTITIES_TURN_OFF[0].name}, ${ENERGY_PENDING} w`, 'yellow')\n        } else if (ENTITIES_TURN_OFF.length > 1 && ENERGY_PENDING > 0) {\n            SendPowerControl(1, `${APP_NAME} ha spento ${ENTITIES_TURN_OFF.length} carichi, ${ENERGY_PENDING} w`, 'yellow')\n        } else if (ENTITIES_TURN_OFF.length === 1) {\n            SendPowerControl(1, `${APP_NAME} ha spento ${ENTITIES_TURN_OFF[0].name}`, 'yellow')\n        } else if (ENTITIES_TURN_OFF.length > 1) {\n            SendPowerControl(1, `${APP_NAME} ha spento ${ENTITIES_TURN_OFF.length} carichi`, 'yellow')\n        }\n\n        return null\n    } else {\n        ENTITIES_ENERGY_PENDING = OVERLOAD.energy_pending\n\n        for (let i = 0; i < ENTITIES.length; i++) {\n            if (ENTITIES[i].state.toLowerCase() == 'on' && !OVERLOAD.entities.includes(ENTITIES[i].load)) {\n                SendPowerControl(1, `${APP_NAME} ha rilevato un sovraccarico di ${POWER_OVERLOAD()} w e fra ${OVERLOAD.wait} minuti spegnerà ${ENTITIES[i].name}`, 'yellow')\n                global.set('powercontrol.overload', OVERLOAD)\n                return null\n            }\n        }\n\n        if (ENTITIES_ENERGY_PENDING > 0) {\n            SendPowerControl(1, `${APP_NAME} ha spento tutti e ${ENTITIES_COUNT} i carichi per un totale di ${ENTITIES_ENERGY_PENDING} w`, 'yellow')\n        } else {\n            SendPowerControl(1, `${APP_NAME} ha spento tutti e ${ENTITIES_COUNT} i carichi`, 'yellow')\n        }\n\n        return null\n    }\n} else {\n    MINUTES = GetTimeElapsed(OVERLOAD.last_command).minutes\n    OVERLOAD.wait = DELAY_TURN_ON - MINUTES\n    OVERLOAD.energy_consumption = ENTITIES_ENERGY_CONSUMPTION\n\n    const ENTITY_NAME = function (/** @type {string} */ entity_id) {\n        for (let i = 0; i < ENTITIES.length; i++) {\n            if (ENTITIES[i].load == entity_id) {\n                return ENTITIES[i].name\n            }\n        }\n        return null\n    }\n\n    //verifico ci sono carichi da accende\n    if (OVERLOAD.entities.length > 0) {\n        for (let i = 0; i < ENTITIES.length; i++) {\n            let element = ENTITIES[i]\n            //se il carico è già acceso o non deve essere ripristinato lo rimuovo dalla lista\n            if (OVERLOAD.entities.includes(element.load) && (element.state.toLowerCase() == 'on' || !element.restore)) {\n                //elimino il carico dalla lista\n                OVERLOAD.entities = OVERLOAD.entities.filter(function (item) {\n                    return item !== element.load\n                })\n            }\n        }\n    }\n\n    if (OVERLOAD.entities.length > 0 && MINUTES >= DELAY_TURN_ON) {\n        OVERLOAD.wait = 0\n        OVERLOAD.last_command = GetUnix()\n        let element = OVERLOAD.entities[OVERLOAD.entities.length - 1]\n        TurnOn(element)\n        global.set('powercontrol.overload', OVERLOAD)\n        SendPowerControl(1, `${APP_NAME} ha ripristinato ${element}`, 'yellow')\n    } else if (OVERLOAD.entities.length > 1) {\n        SendPowerControl(1, `${APP_NAME} fra ${OVERLOAD.wait} minuti ripristina il primo carico`, 'yellow')\n        global.set('powercontrol.overload', OVERLOAD)\n    } else if (OVERLOAD.entities.length === 1) {\n        SendPowerControl(1, `${APP_NAME} fra ${OVERLOAD.wait} minuti ripristina ${ENTITY_NAME(OVERLOAD.entities[0])}`, 'yellow')\n        global.set('powercontrol.overload', OVERLOAD)\n    } else {\n        SendPowerControl(1, `${APP_NAME} è in funzione, il consumo attuale è ${POWER_NOW()} w su una potenza disponibile di ${POWER_AVAILABLE()} w`, 'green')\n        global.set('powercontrol.overload', null)\n    }\n\n    return null\n}",
+        "outputs": 2,
+        "noerr": 0,
+        "initialize": "// Code added here will be run once\n// whenever the node is started.\nnode.status({ fill: 'gray', shape: \"ring\", text: 'Initialization...' })",
+        "finalize": "",
+        "libs": [],
+        "x": 310,
+        "y": 40,
+        "wires": [
+            [
+                "acad7c9b4d534d5f"
+            ],
+            [
+                "3da39c725ea748c6"
+            ]
+        ],
+        "outputLabels": [
+            "MQTT",
+            "Hassio"
+        ]
+    },
+    {
+        "id": "085e71b5cd477abc",
+        "type": "inject",
+        "z": "1098badcef37db4e",
+        "name": "5s",
+        "props": [],
+        "repeat": "5",
+        "crontab": "",
+        "once": true,
+        "onceDelay": "5",
+        "topic": "",
+        "x": 55,
+        "y": 90,
+        "wires": [
+            [
+                "b0c6c534b02c10a8"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "7852f8568f87532d",
+        "type": "delay",
+        "z": "1098badcef37db4e",
+        "name": "",
+        "pauseType": "rate",
+        "timeout": "5",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 445,
+        "y": 140,
+        "wires": [
+            []
+        ],
+        "l": false
+    },
+    {
+        "id": "b0c6c534b02c10a8",
+        "type": "delay",
+        "z": "1098badcef37db4e",
+        "name": "",
+        "pauseType": "rate",
+        "timeout": "5",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": true,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 185,
+        "y": 40,
+        "wires": [
+            [
+                "cfd7f621ad587700"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "3da39c725ea748c6",
+        "type": "delay",
+        "z": "1098badcef37db4e",
+        "name": "",
+        "pauseType": "rate",
+        "timeout": "5",
+        "timeoutUnits": "seconds",
+        "rate": "2",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 445,
+        "y": 90,
+        "wires": [
+            []
+        ],
+        "l": false
+    },
+    {
+        "id": "acad7c9b4d534d5f",
+        "type": "delay",
+        "z": "1098badcef37db4e",
+        "name": "",
+        "pauseType": "rate",
+        "timeout": "5",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 445,
+        "y": 40,
+        "wires": [
+            []
+        ],
+        "l": false
+    },
+    {
+        "id": "2a8f0b84cb2faa40",
+        "type": "subflow:1098badcef37db4e",
+        "z": "095322b376af2942",
+        "name": "",
+        "env": [
+            {
+                "name": "general_sensor",
+                "value": "sensor.contatore_enel",
+                "type": "str"
+            },
+            {
+                "name": "power_limit",
+                "value": "2980",
+                "type": "num"
+            },
+            {
+                "name": "entities",
+                "value": "[{\"power\":\"sensor.condizionatore_camera_power\",\"load\":\"switch.condizionatore_camera\"},{\"power\":\"sensor.condizionatore_cameretta_power\",\"load\":\"switch.condizionatore_cameretta\",\"restore\":false},{\"power\":\"sensor.condizionatore_soggiorno_power\",\"load\":\"switch.condizionatore_soggiorno\"},{\"power\":\"sensor.macchina_caffe_power\",\"load\":\"switch.macchina_caffe\",\"restore\":false},{\"power\":\"sensor.lavatrice_power\",\"load\":\"switch.lavatrice\"},{\"power\":\"sensor.forno_power\",\"load\":\"switch.forno\"}]",
+                "type": "json"
+            },
+            {
+                "name": "delay_switch_off",
+                "value": "16",
+                "type": "num"
+            }
+        ],
+        "x": 290,
+        "y": 110,
+        "wires": [
+            [
+                "ac291cfe9867cfc8"
+            ],
+            [
+                "6f0cd7861952e43e"
+            ]
+        ]
+    }
+]
